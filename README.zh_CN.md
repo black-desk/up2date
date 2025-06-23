@@ -4,19 +4,20 @@ SPDX-FileCopyrightText: 2025 Chen Linxuan <me@black-desk.cn>
 SPDX-License-Identifier: MIT
 -->
 
-# 模板
+# up2date
 
 [en](README.md) | zh_CN
 
-我的个人项目模板
+一个用于检查当前仓库中的依赖是否都已经通过dependabot配置了自动更新的命令行工具。
 
 ## 使用
 
-<!-- TODO -->
-
-## 注意
-
-<!-- TODO -->
+```bash
+up2date # Markdown输出
+up2date --json # JSON输出
+up2date --yaml # YAML输出
+up2date --toml # TOML输出
+```
 
 ## 许可证
 
