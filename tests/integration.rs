@@ -544,3 +544,282 @@ fn test_exit_code_success_when_empty() {
     // Should exit with code 0 when no ecosystems are found
     cmd.assert().success();
 }
+
+#[test]
+fn test_action_yaml_detection() {
+    let temp_dir = TempDir::new().unwrap();
+
+    // Create action.yaml file
+    fs::write(
+        temp_dir.path().join("action.yaml"),
+        r#"name: 'Test Action'
+description: 'A test GitHub Action'
+inputs:
+  test-input:
+    description: 'Test input'
+    required: false
+runs:
+  using: 'node20'
+  main: 'index.js'
+"#,
+    )
+    .unwrap();
+
+    let mut cmd = Command::cargo_bin("up2date").unwrap();
+    cmd.current_dir(temp_dir.path());
+    cmd.arg("--json");
+
+    let output = cmd.assert().code(1).get_output().stdout.clone();
+    let json_str = String::from_utf8(output).unwrap();
+    let actual: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+
+    // Expected JSON for project with action.yaml
+    let expected = serde_json::json!({
+        "summary": {
+            "total_ecosystems": 1,
+            "configured_ecosystems": 0,
+            "missing_ecosystems": 1
+        },
+        "project_dependencies": [
+            {
+                "ecosystem": "github-actions",
+                "directory": "."
+            }
+        ],
+        "dependabot_ecosystems": [],
+        "missing_from_dependabot": ["github-actions"]
+    });
+
+    assert_json_eq_unordered(&actual, &expected);
+}
+
+#[test]
+fn test_action_yml_detection() {
+    let temp_dir = TempDir::new().unwrap();
+
+    // Create action.yml file
+    fs::write(
+        temp_dir.path().join("action.yml"),
+        r#"name: 'Test Action'
+description: 'A test GitHub Action'
+inputs:
+  test-input:
+    description: 'Test input'
+    required: false
+runs:
+  using: 'node20'
+  main: 'index.js'
+"#,
+    )
+    .unwrap();
+
+    let mut cmd = Command::cargo_bin("up2date").unwrap();
+    cmd.current_dir(temp_dir.path());
+    cmd.arg("--json");
+
+    let output = cmd.assert().code(1).get_output().stdout.clone();
+    let json_str = String::from_utf8(output).unwrap();
+    let actual: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+
+    // Expected JSON for project with action.yml
+    let expected = serde_json::json!({
+        "summary": {
+            "total_ecosystems": 1,
+            "configured_ecosystems": 0,
+            "missing_ecosystems": 1
+        },
+        "project_dependencies": [
+            {
+                "ecosystem": "github-actions",
+                "directory": "."
+            }
+        ],
+        "dependabot_ecosystems": [],
+        "missing_from_dependabot": ["github-actions"]
+    });
+
+    assert_json_eq_unordered(&actual, &expected);
+}
+
+#[test]
+fn test_action_yaml_in_subdirectory() {
+    let temp_dir = TempDir::new().unwrap();
+
+    // Create subdirectory with action.yaml
+    fs::create_dir_all(temp_dir.path().join("custom-action")).unwrap();
+    fs::write(
+        temp_dir.path().join("custom-action/action.yaml"),
+        r#"name: 'Custom Action'
+description: 'A custom GitHub Action'
+runs:
+  using: 'composite'
+  steps:
+    - shell: bash
+      run: echo "Hello World"
+"#,
+    )
+    .unwrap();
+
+    let mut cmd = Command::cargo_bin("up2date").unwrap();
+    cmd.current_dir(temp_dir.path());
+    cmd.arg("--json");
+
+    let output = cmd.assert().code(1).get_output().stdout.clone();
+    let json_str = String::from_utf8(output).unwrap();
+    let actual: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+
+    // Expected JSON for project with action.yaml in subdirectory
+    let expected = serde_json::json!({
+        "summary": {
+            "total_ecosystems": 1,
+            "configured_ecosystems": 0,
+            "missing_ecosystems": 1
+        },
+        "project_dependencies": [
+            {
+                "ecosystem": "github-actions",
+                "directory": "custom-action"
+            }
+        ],
+        "dependabot_ecosystems": [],
+        "missing_from_dependabot": ["github-actions"]
+    });
+
+    assert_json_eq_unordered(&actual, &expected);
+}
+
+#[test]
+fn test_multiple_action_files() {
+    let temp_dir = TempDir::new().unwrap();
+
+    // Create multiple action files in different directories
+    fs::write(
+        temp_dir.path().join("action.yaml"),
+        r#"name: 'Root Action'
+description: 'Action in root'
+runs:
+  using: 'node20'
+  main: 'index.js'
+"#,
+    )
+    .unwrap();
+
+    fs::create_dir_all(temp_dir.path().join("sub1")).unwrap();
+    fs::write(
+        temp_dir.path().join("sub1/action.yml"),
+        r#"name: 'Sub Action 1'
+description: 'Action in sub1'
+runs:
+  using: 'node20'
+  main: 'index.js'
+"#,
+    )
+    .unwrap();
+
+    fs::create_dir_all(temp_dir.path().join("sub2")).unwrap();
+    fs::write(
+        temp_dir.path().join("sub2/action.yaml"),
+        r#"name: 'Sub Action 2'
+description: 'Action in sub2'
+runs:
+  using: 'composite'
+  steps:
+    - shell: bash
+      run: echo "Hello"
+"#,
+    )
+    .unwrap();
+
+    let mut cmd = Command::cargo_bin("up2date").unwrap();
+    cmd.current_dir(temp_dir.path());
+    cmd.arg("--json");
+
+    let output = cmd.assert().code(1).get_output().stdout.clone();
+    let json_str = String::from_utf8(output).unwrap();
+    let actual: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+
+    // Expected JSON for project with multiple action files
+    let expected = serde_json::json!({
+        "summary": {
+            "total_ecosystems": 1,
+            "configured_ecosystems": 0,
+            "missing_ecosystems": 1
+        },
+        "project_dependencies": [
+            {
+                "ecosystem": "github-actions",
+                "directory": "."
+            },
+            {
+                "ecosystem": "github-actions",
+                "directory": "sub1"
+            },
+            {
+                "ecosystem": "github-actions",
+                "directory": "sub2"
+            }
+        ],
+        "dependabot_ecosystems": [],
+        "missing_from_dependabot": ["github-actions"]
+    });
+
+    assert_json_eq_unordered(&actual, &expected);
+}
+
+#[test]
+fn test_action_yaml_with_dependabot_configured() {
+    let temp_dir = TempDir::new().unwrap();
+
+    // Create action.yaml file
+    fs::write(
+        temp_dir.path().join("action.yaml"),
+        r#"name: 'Test Action'
+description: 'A test GitHub Action'
+runs:
+  using: 'node20'
+  main: 'index.js'
+"#,
+    )
+    .unwrap();
+
+    // Create .github directory and dependabot config
+    fs::create_dir_all(temp_dir.path().join(".github")).unwrap();
+    fs::write(
+        temp_dir.path().join(".github/dependabot.yaml"),
+        r#"version: 2
+updates:
+  - directory: /
+    package-ecosystem: github-actions
+    schedule:
+      interval: daily
+"#,
+    )
+    .unwrap();
+
+    let mut cmd = Command::cargo_bin("up2date").unwrap();
+    cmd.current_dir(temp_dir.path());
+    cmd.arg("--json");
+
+    let output = cmd.assert().success().get_output().stdout.clone();
+    let json_str = String::from_utf8(output).unwrap();
+    let actual: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+
+    // Expected JSON for project with action.yaml and dependabot configured
+    let expected = serde_json::json!({
+        "summary": {
+            "total_ecosystems": 1,
+            "configured_ecosystems": 1,
+            "missing_ecosystems": 0
+        },
+        "project_dependencies": [
+            {
+                "ecosystem": "github-actions",
+                "directory": "."
+            }
+        ],
+        "dependabot_ecosystems": ["github-actions"],
+        "missing_from_dependabot": []
+    });
+
+    assert_json_eq_unordered(&actual, &expected);
+}

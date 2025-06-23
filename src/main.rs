@@ -179,7 +179,7 @@ fn find_project_dependencies(project_root: &Path) -> Vec<ProjectDependency> {
             "go.mod" => Some("gomod"),
             ".gitmodules" => Some("gitsubmodule"),
             "Dockerfile" | "Containerfile" => Some("docker"),
-            "action.yaml" | "action.yml" => Some("github-action"),
+            "action.yaml" | "action.yml" => Some("github-actions"),
             _ => None,
         };
 
