@@ -12,3 +12,7 @@ updates:
     package-ecosystem: gitsubmodule
     schedule:
       interval: daily
+  - directory: /
+    package-ecosystem: cargo
+    schedule:
+      interval: daily

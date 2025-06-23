@@ -18,3 +18,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: black-desk/workflows/generic@master
+  rust:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: black-desk/workflows/rust@master
+  container:
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: black-desk/workflows/container@master

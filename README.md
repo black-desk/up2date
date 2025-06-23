@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: 2025 Chen Linxuan <me@black-desk.cn>
 SPDX-License-Identifier: MIT
 -->
 
-# Template
+# up2date
 
 en | [zh_CN](README.zh_CN.md)
 
@@ -12,15 +12,16 @@ en | [zh_CN](README.zh_CN.md)
 > This English README is translated from the Chinese version
 > using AI and may contain errors.
 
-My personal project template
+A command-line tool to check if all dependencies in the current repository have been configured for automatic updates via dependabot.
 
 ## Usage
 
-<!-- TODO -->
-
-## Note
-
-<!-- TODO -->
+```bash
+up2date # Markdown output
+up2date --json # JSON output
+up2date --yaml # YAML output
+up2date --toml # TOML output
+```
 
 ## License
 
@@ -38,4 +39,4 @@ SPDX list for this project:
 reuse spdx
 ```
 
-[REUSE Specification]: https://reuse.software/spec-3.3/
+[REUSE specification]: https://reuse.software/spec-3.3/
