@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2025 Chen Linxuan <me@black-desk.cn>
+#
+# SPDX-License-Identifier: MIT
+
+name: Continuous Integration
+on:
+  push:
+    branches:
+      - main
+      - master
+      - release/*
+  pull_request:
+  schedule:
+    - cron: '0 0 * * 0' # Runs every Sunday at midnight UTC
+
+jobs:
+  generic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: black-desk/workflows/generic@master
